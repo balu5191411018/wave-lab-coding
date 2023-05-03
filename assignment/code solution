@@ -1,0 +1,121 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define MAX_NODES 100
+#define MAX_EDGES 6000
+
+typedef struct Edge {
+    int to;
+    int weight;
+} Edge;
+
+Edge graph[MAX_NODES][MAX_NODES]; // adjacency matrix representation
+int dist[MAX_NODES]; // shortest distance from source to each node
+bool visited[MAX_NODES]; // flag to track visited nodes
+
+// Dijkstra's algorithm to find shortest path from source to all nodes
+void dijkstra(int n, int source) {
+    // initialize distance array
+    for (int i = 1; i <= n; i++) {
+        dist[i] = INT_MAX;
+        visited[i] = false;
+    }
+    dist[source] = 0;
+    
+    // loop through all nodes
+    for (int i = 1; i <= n; i++) {
+        // find node with minimum distance that hasn't been visited
+        int minDist = INT_MAX, minNode = -1;
+        for (int j = 1; j <= n; j++) {
+            if (!visited[j] && dist[j] < minDist) {
+                minDist = dist[j];
+                minNode = j;
+            }
+        }
+        if (minNode == -1) break; // no reachable nodes left
+        
+        // mark node as visited
+        visited[minNode] = true;
+        
+        // update distances to neighbors
+        for (int j = 1; j <= n; j++) {
+            if (graph[minNode][j].weight > 0 && !visited[j]) {
+                int newDist = dist[minNode] + graph[minNode][j].weight;
+                if (newDist < dist[j]) {
+                    dist[j] = newDist;
+                }
+            }
+        }
+    }
+}
+
+int networkDelayTime(int** times, int timesSize, int* timesColSize, int n, int k){
+    // initialize graph
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            graph[i][j].weight = 0;
+        }
+    }
+    for (int i = 0; i < timesSize; i++) {
+        int from = times[i][0], to = times[i][1], weight = times[i][2];
+        graph[from][to].to = to;
+        graph[from][to].weight = weight;
+    }
+    
+    // run Dijkstra's algorithm
+    dijkstra(n, k);
+    
+    // find maximum distance
+    int maxDist = 0;
+    for (int i = 1; i <= n; i++) {
+        if (dist[i] == INT_MAX) return -1; // unreachable node
+        if (dist[i] > maxDist) maxDist = dist[i];
+    }
+    return maxDist;
+}
+
+
+
+int networkDelayTime(int** times, int timesSize, int* timesColSize, int n, int k);
+
+int main() {
+    // get input values from user
+    int n, k;
+    printf("Enter the number of nodes: (n) ");
+    scanf("%d", &n);
+    printf("Enter the source node: (k) ");
+    scanf("%d", &k);
+
+    printf("Enter the number of edges: ");
+    int m;
+    scanf("%d", &m);
+
+    int **times = (int **)malloc(m * sizeof(int *));
+    for (int i = 0; i < m; i++) {
+        times[i] = (int *)malloc(3 * sizeof(int));
+    }
+    for (int i = 0; i < m; i++) {
+        printf("Enter the edge from, to, and weight separated by space: ");
+        scanf("%d %d %d", &times[i][0], &times[i][1], &times[i][2]);
+    }
+
+    // call networkDelayTime function to calculate maximum distance
+    int maxDist = networkDelayTime(times, m, NULL, n, k);
+
+    // print result
+    if (maxDist == -1) {
+        printf("Some nodes are not reachable from the source node.");
+    } else {
+        printf("The maximum distance from the source node to any other node is %d.", maxDist);
+    }
+
+    // free memory allocated for times array
+    for (int i = 0; i < m; i++) {
+        free(times[i]);
+    }
+    free(times);
+
+    return 0;
+}
